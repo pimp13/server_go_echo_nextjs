@@ -1,19 +1,23 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
+	"backend_next_echo/internal/server"
+	"backend_next_echo/pkg/config"
 	"log"
-	"net/http"
 )
 
-type StrResponse map[string]string
+func init() {
+	if err := config.Initialize(); err != nil {
+		log.Fatal("error in not exists .env file:", err.Error())
+	}
+}
 
 func main() {
-	app := gin.Default()
+	if err := server.ConnectDb(); err != nil {
+		log.Fatalf("Database connection error: %v", err)
+	}
+	defer server.CloseDb()
 
-	app.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, StrResponse{"message": "pong"})
-	})
-
-	log.Fatal(app.Run(":8085"))
+	apiServer := server.NewAPI(":8070", nil)
+	apiServer.Run()
 }
